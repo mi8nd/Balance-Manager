@@ -26,5 +26,10 @@ e2e/.secrets/
 e2e/evidence/
 e2e/*.log
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
 # Heap dumps / large files
 *.hprof
