@@ -1,0 +1,18 @@
+appId: com.personal.balance
+name: 01_login_google_explore
+---
+- launchApp
+- assertVisible: "Start managing your finances today"
+- scrollUntilVisible:
+    element:
+      text: "Log in"
+    direction: DOWN
+- tapOn: "Log in"
+- assertVisible: "Welcome back to Balance Manager"
+- takeScreenshot: e2e-evidence/01a-login
+- tapOn: "Continue with Google"
+- extendedWaitUntil:
+    visible: "Cancel"
+    timeout: 25000
+    optional: true
+- takeScreenshot: e2e-evidence/01b-picker

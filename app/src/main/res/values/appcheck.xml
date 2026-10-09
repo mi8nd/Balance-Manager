@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Public reCAPTCHA Enterprise Android site key for Firebase App Check.
+        This is a public client configuration value (not a secret), supplied to
+        RecaptchaAppCheckProviderFactory.getInstance(...) from BalanceApplication.
+
+        The key below is the one issued for package com.personal.balance in the
+        Firebase/Google Cloud console (App Check -> reCAPTCHA Enterprise). It is
+        a public site key, safe to keep in this resource; do NOT put any service
+        account / Firebase Admin / Gemini API credential here. If a new key is
+        ever issued in the console, replace ONLY this value — no code change is
+        needed. While the value is blank, BalanceApplication does not install the
+        App Check provider, so Firebase AI Logic requests fail with
+        AiResult.Error.AppCheckFailure (App Check stays enforced; no bypass).
+    -->
+    <string name="app_check_recaptcha_site_key" translatable="false">6LdH6r4tAAAAAPqfgomgUZ0YQ8-el_r1-wEME19i</string>
+</resources>

@@ -1,0 +1,30 @@
+# Gradle
+.gradle/
+build/
+
+# Local configuration
+local.properties
+
+# IDE
+.idea/
+*.iml
+.kotlin/
+
+# Signing secrets & keystores — NEVER commit
+app/keystore.properties
+app/keystore/
+*.jks
+*.keystore
+
+# OS / editor
+.DS_Store
+Thumbs.db
+captures/
+.externalNativeBuild/
+.cxx/
+e2e/.secrets/
+e2e/evidence/
+e2e/*.log
+
+# Heap dumps / large files
+*.hprof

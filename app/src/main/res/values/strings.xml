@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Balance Manager</string>
+    <!-- Google Sign-In: Replace with your Web Client ID from Firebase Console > Authentication > Sign-in method > Web SDK configuration -->
+    <string name="default_web_client_id">REDACTED_CLIENT_ID.apps.googleusercontent.com</string>
+</resources>
