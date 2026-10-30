@@ -1,0 +1,24 @@
+# Line-ending policy for Balance Manager (Windows host, Git autocrlf=true).
+#
+# Without this file, Git had to guess: it checked files out with CRLF, but a
+# tool could rewrite one with LF and `git status` would then flag it forever
+# even though no text changed (this bit .gitignore / gradlew.bat / e2e scripts
+# in Oct 2026). These rules make the endings explicit so the guesswork
+# -- and the phantom "modified" state -- cannot come back.
+
+# Normalize all text files to LF inside the repository; convert on checkout.
+* text=auto
+
+# Windows scripts and command tools must keep CRLF even when a checkout or
+# tool rewrites them.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Never touch these formats' endings at all.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.apk binary
+*.jks binary
+*.keystore binary
