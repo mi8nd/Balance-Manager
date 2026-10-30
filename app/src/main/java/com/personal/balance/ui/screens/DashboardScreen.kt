@@ -9,13 +9,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -108,6 +108,28 @@ fun DashboardScreen(
                         currentTheme = themeMode,
                         onToggle = onToggleTheme
                     )
+                    // AI Financial Assistant — its own shortcut beside the settings gear.
+                    IconButton(
+                        onClick = onOpenFinancialAssistant
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.AutoAwesome,
+                            contentDescription = "AI Financial Assistant",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    // AI smoke test — visible in debug builds only.
+                    if (BuildConfig.DEBUG && onOpenAiSmokeTest != null) {
+                        IconButton(
+                            onClick = onOpenAiSmokeTest
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Science,
+                                contentDescription = "AI Smoke Test",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                     // Settings gear icon with anchored dropdown
                     Box {
                         IconButton(
@@ -135,38 +157,6 @@ fun DashboardScreen(
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Divider(modifier = Modifier.padding(vertical = 8.dp))
-                            }
-                            DropdownMenuItem(
-                                onClick = {
-                                    showSettingsMenu = false
-                                    onOpenFinancialAssistant()
-                                },
-                                text = { Text("AI Financial Assistant", color = MaterialTheme.colorScheme.primary) },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Filled.SmartToy,
-                                        contentDescription = "AI Financial Assistant",
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            )
-                            Divider(modifier = Modifier.padding(vertical = 8.dp))
-                            if (BuildConfig.DEBUG && onOpenAiSmokeTest != null) {
-                                DropdownMenuItem(
-                                    onClick = {
-                                        showSettingsMenu = false
-                                        onOpenAiSmokeTest()
-                                    },
-                                    text = { Text("AI Smoke Test", color = MaterialTheme.colorScheme.primary) },
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Filled.Build,
-                                            contentDescription = "AI Smoke Test",
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
                                 )
                                 Divider(modifier = Modifier.padding(vertical = 8.dp))
                             }
