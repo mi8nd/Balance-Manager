@@ -7,10 +7,7 @@ import com.personal.balance.data.FirebaseFinancialTransactionsSource
 import com.personal.balance.data.FirestoreGoalCoachSource
 import com.personal.balance.data.FirestoreUserRepository
 import com.personal.balance.data.UserConfigResult
-import com.personal.balance.data.ai.FirebaseAiAssistantRepository
-import com.personal.balance.data.ai.FirebaseAiAuthProvider
-import com.personal.balance.data.ai.SharedAiUsageController
-import com.personal.balance.domain.ai.AskAiUseCase
+import com.personal.balance.domain.ai.AiStackFactory
 import com.personal.balance.domain.finance.TransactionInsight
 import com.personal.balance.domain.insights.FinancialInsightsResult
 import com.personal.balance.domain.insights.FinancialInsightsSnapshot
@@ -114,11 +111,7 @@ class DashboardInsightViewModel(
 
 /** Production wiring: one AskAiUseCase over the shared budget + the app's sources. */
 private fun defaultDashboardInsightsUseCase(): FinancialInsightsUseCase {
-    val askAi = AskAiUseCase(
-        authProvider = FirebaseAiAuthProvider(),
-        usageController = SharedAiUsageController.instance,
-        assistant = FirebaseAiAssistantRepository(),
-    )
+    val askAi = AiStackFactory().createAskAiUseCase()
     return FinancialInsightsUseCase(
         currentUserId = { FirebaseAuth.getInstance().currentUser?.uid },
         transactionsSource = FirebaseFinancialTransactionsSource(),

@@ -2,15 +2,12 @@ package com.personal.balance.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
 import com.personal.balance.data.AddTransactionResult
 import com.personal.balance.data.FirestoreUserRepository
 import com.personal.balance.data.FirebaseAuthRepository
 import com.personal.balance.data.UserConfigResult
 import com.personal.balance.data.AuthResult
-import com.personal.balance.data.ai.FirebaseAiAssistantRepository
-import com.personal.balance.data.ai.FirebaseAiAuthProvider
-import com.personal.balance.data.ai.SharedAiUsageController
+import com.personal.balance.domain.ai.AiStackFactory
 import com.personal.balance.domain.ai.AskAiUseCase
 import com.personal.balance.domain.category.CategorizeTransactionUseCase
 import com.personal.balance.domain.category.DeterministicCategoryClassifier
@@ -41,6 +38,7 @@ sealed class DashboardNavigationEvent {
 class DashboardViewModel(
     private val authRepo: FirebaseAuthRepository = FirebaseAuthRepository(),
     private val userRepo: FirestoreUserRepository = FirestoreUserRepository(),
+    private val aiStackFactory: AiStackFactory = AiStackFactory(),
     private val lazyCategorizer: (() -> CategorizeTransactionUseCase)? = null,
 ) : ViewModel() {
 
@@ -52,13 +50,15 @@ class DashboardViewModel(
      * construction — [AskAiUseCase] enforces it before contacting the backend.
      */
     private val askAi: AskAiUseCase by lazy {
-        AskAiUseCase(
-            authProvider = FirebaseAiAuthProvider(),
-            usageController = SharedAiUsageController.instance,
-            assistant = FirebaseAiAssistantRepository(),
-        )
+        aiStackFactory.createAskAiUseCase()
     }
 
+    /**
+     * Test seam: allows tests to inject a fully-configured categorizer without
+     * needing to also replace the private [askAi]. Production code uses the
+     * default lazy initializer that wires the categorizer to this ViewModel's
+     * [askAi].
+     */
     private val categorizer: CategorizeTransactionUseCase by lazy {
         lazyCategorizer?.invoke() ?: CategorizeTransactionUseCase(askAi = askAi)
     }
@@ -81,21 +81,12 @@ class DashboardViewModel(
     val currentUserEmail: String?
         get() = authRepo.getCurrentEmail()
 
-    private var authStateListener: FirebaseAuth.AuthStateListener? = null
-
     init {
         loadDashboardData()
         setupAuthStateListener()
     }
 
     private fun setupAuthStateListener() {
-        authStateListener = FirebaseAuth.AuthStateListener { auth ->
-            if (auth.currentUser == null) {
-                // User logged out or session became invalid
-                clearUserState()
-                _navigationEvent.value = DashboardNavigationEvent.NavigateToAuth
-            }
-        }
         authRepo.addAuthStateListener { isAuthenticated ->
             if (!isAuthenticated) {
                 clearUserState()
@@ -218,8 +209,7 @@ class DashboardViewModel(
     fun deleteAccount() {
         viewModelScope.launch {
             // Get fresh user reference to avoid stale state issues
-            val currentUser = FirebaseAuth.getInstance().currentUser ?: return@launch
-            val currentUserId = currentUser.uid
+            val currentUserId = authRepo.getCurrentUser() ?: return@launch
             // GUARD FIRST (see PROJECT_MAP §28): capture the ID token BEFORE any
             // destructive step. Firebase Auth enforces a recent-login window on
             // account deletion; doing auth deletion FIRST means a failed delete
@@ -339,11 +329,5 @@ class DashboardViewModel(
 
     private fun clearUserState() {
         _uiState.value = DashboardUiState.Loading
-    }
-
-    override fun onCleared() {
-        authStateListener?.let { FirebaseAuth.getInstance().removeAuthStateListener(it) }
-        authStateListener = null
-        super.onCleared()
     }
 }

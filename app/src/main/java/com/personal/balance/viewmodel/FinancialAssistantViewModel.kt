@@ -7,10 +7,8 @@ import com.personal.balance.data.FirebaseFinancialTransactionsSource
 import com.personal.balance.data.FirestoreGoalCoachSource
 import com.personal.balance.data.FirestoreUserRepository
 import com.personal.balance.data.UserConfigResult
-import com.personal.balance.data.ai.FirebaseAiAssistantRepository
-import com.personal.balance.data.ai.FirebaseAiAuthProvider
-import com.personal.balance.data.ai.SharedAiUsageController
 import com.personal.balance.domain.ai.AiResult
+import com.personal.balance.domain.ai.AiStackFactory
 import com.personal.balance.domain.ai.AskAiUseCase
 import com.personal.balance.domain.ai.ChatSender
 import com.personal.balance.domain.ai.ConversationTurn
@@ -62,6 +60,7 @@ data class FinancialAssistantUiState(
 class FinancialAssistantViewModel(
     private val askFinancialQuestion: (suspend (String) -> AiResult)? = null,
     private val lazyOrchestrator: (() -> AiOrchestrator)? = null,
+    private val aiStackFactory: AiStackFactory = AiStackFactory(),
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FinancialAssistantUiState())
@@ -146,12 +145,6 @@ class FinancialAssistantViewModel(
             return when (val raw = legacy(question)) {
                 is AiResult.Success -> AiOrchestrationResult.Text(raw.text)
                 is AiResult.Error -> AiOrchestrationResult.Error(raw)
-                null -> AiOrchestrationResult.Error(
-                    AiResult.Error.UnexpectedFailure(
-                        "Something went wrong. Please try again later.",
-                        "ai.legacy.null",
-                    ),
-                )
             }
         }
         val orch = lazyOrchestrator?.invoke() ?: builtOrchestrator ?: buildDefaultOrchestrator().also {
@@ -195,25 +188,21 @@ class FinancialAssistantViewModel(
 
         private const val MAX_CONVERSATION_TURNS = 6
         private const val TURN_TEXT_LIMIT = 200
+    }
 
-        private fun buildDefaultOrchestrator(): AiOrchestrator {
-            val askAi = AskAiUseCase(
-                authProvider = FirebaseAiAuthProvider(),
-                usageController = SharedAiUsageController.instance,
-                assistant = FirebaseAiAssistantRepository(),
-            )
-            return AiOrchestrator(
-                currentUserId = { FirebaseAuth.getInstance().currentUser?.uid },
-                transactionsSource = FirebaseFinancialTransactionsSource(),
-                planner = GeminiAiRequestPlanner(askAi),
-                askAi = askAi,
-                balanceSource = { uid ->
-                    val userRepo = FirestoreUserRepository()
-                    val result = userRepo.getUserConfig(uid)
-                    if (result is UserConfigResult.Success) result.config.currentBalance else null
-                },
-                goalCoachSource = FirestoreGoalCoachSource(),
-            )
-        }
+    private fun buildDefaultOrchestrator(): AiOrchestrator {
+        val askAi = aiStackFactory.createAskAiUseCase()
+        return AiOrchestrator(
+            currentUserId = { FirebaseAuth.getInstance().currentUser?.uid },
+            transactionsSource = FirebaseFinancialTransactionsSource(),
+            planner = GeminiAiRequestPlanner(askAi),
+            askAi = askAi,
+            balanceSource = { uid ->
+                val userRepo = FirestoreUserRepository()
+                val result = userRepo.getUserConfig(uid)
+                if (result is UserConfigResult.Success) result.config.currentBalance else null
+            },
+            goalCoachSource = FirestoreGoalCoachSource(),
+        )
     }
 }
