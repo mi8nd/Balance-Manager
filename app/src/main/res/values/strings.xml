@@ -1,5 +1,12 @@
 <resources>
     <string name="app_name">Balance Manager</string>
-    <!-- Google Sign-In: Replace with your Web Client ID from Firebase Console > Authentication > Sign-in method > Web SDK configuration -->
-    <string name="default_web_client_id">REDACTED_CLIENT_ID.apps.googleusercontent.com</string>
+    <!--
+        Google Sign-In web client id is NOT declared here on purpose.
+        The com.google.gms.google-services Gradle plugin generates
+        `default_web_client_id` (and google_api_key / google_app_id / project_id)
+        from the Git-ignored app/google-services.json, so project-specific client
+        ids and keys never live in tracked source. Download that file from the
+        Firebase console (Project settings -> Your apps -> com.personal.balance);
+        app/google-services.json.example shows its shape.
+    -->
 </resources>

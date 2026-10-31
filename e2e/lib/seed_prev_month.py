@@ -6,13 +6,17 @@ users/{uid}/transactions with explicit categories and August-2026 timestamps. Th
 users/{uid} currentBalance is left untouched (historical backfill must not alter balance).
 """
 import json
+import os
 import sys
 import urllib.request
 import urllib.parse
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-API_KEY = "REDACTED_API_KEY"
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from creds import firebase_web_api_key
+
+API_KEY = firebase_web_api_key()
 PROJECT_ID = "REDACTED_PROJECT_ID"
 
 def load_creds():

@@ -10,6 +10,8 @@ Single-module Compose Android app (`com.personal.balance`, module `:app`). Windo
 - Focused tests: `.\gradlew.bat :app:testDebugUnitTest --tests "*Chat*"` (Gradle needs the precise current suite; keep full-suite green after any test change)
 - Lint: `.\gradlew.bat :app:lintDebug` (currently 0 errors, ~19 pre-existing GradleDependency/icon warnings — don't churn on those)
 - Debug APK: `.\gradlew.bat :app:assembleDebug`. Release (`assembleRelease`) needs Git-ignored `app/keystore.properties` + `app/keystore/balance-release.jks`; otherwise it builds unsigned. Never print or commit those secrets.
+- `app/google-services.json` is **Git-ignored** (project id, API keys, OAuth client ids, signing-cert hashes). Every machine needs its own copy, downloaded from the Firebase console (Project settings → Your apps → `com.personal.balance`); `app/google-services.json.example` shows the shape. Without it the `com.google.gms.google-services` plugin fails the build. The e2e Python harness reads the web API key / cert hash from that same file (`e2e/lib/creds.py`), so it needs no committed secrets either.
+- `.claude/` is local agent tooling, not part of the project, and stays Git-ignored.
 
 ## Architecture facts that change behavior
 - One AI stack, reused everywhere: `AskAiUseCase` (auth → shared device-local budget → assistant), `SharedAiUsageController.instance` (the ONLY usage controller), `FirebaseAiAssistantRepository`, `DefaultAiConfig` (`gemini-3.1-flash-lite`, `text/plain`, fixed safety settings). Add a feature by varying only `systemPrompt` (e.g. `DefaultChatAiConfig`). Do NOT add a new AI SDK/backend/model/controller — static `*VerificationTest`s enforce this and will fail.

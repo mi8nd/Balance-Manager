@@ -1,11 +1,15 @@
-import json, re, sys, urllib.request, urllib.error
+import json, os, re, sys, urllib.request, urllib.error
 
-KEY = "REDACTED_API_KEY"
-CERT = "1022B0D0D0AA91C15906677F40244F973CD51CDA"
+sys.path.insert(0, os.path.dirname(__file__))
+import creds
+
+KEY = creds.firebase_web_api_key()
+CERT = creds.firebase_cert_hash()
 PKG = "com.personal.balance"
 
-addr = sys.argv[1] if len(sys.argv) > 1 else "e2eqa20260917080349@uberip.com"
-pw = sys.argv[2] if len(sys.argv) > 2 else "RUNTIME_PASSWORD"
+_local = creds.load()
+addr = sys.argv[1] if len(sys.argv) > 1 else _local["primary_email"]
+pw = sys.argv[2] if len(sys.argv) > 2 else _local["primary_password"]
 
 
 def call(url, body=None, tok=None, android=False):

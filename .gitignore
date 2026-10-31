@@ -5,6 +5,14 @@ build/
 # Local configuration
 local.properties
 
+# Firebase client config - download it from the Firebase console per machine,
+# or copy app/google-services.json.example and fill in your project's values.
+# Git-ignored so project ids / API keys / signing-cert hashes stay out of the repo.
+app/google-services.json
+
+# Local agent/editor tooling - not part of the project
+.claude/
+
 # IDE
 .idea/
 *.iml

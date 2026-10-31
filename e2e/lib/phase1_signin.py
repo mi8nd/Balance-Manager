@@ -18,8 +18,10 @@ STATE_DIR = os.path.join(EVIDENCE, "phase1_ui")
 os.makedirs(EVIDENCE, exist_ok=True)
 os.makedirs(STATE_DIR, exist_ok=True)
 
-EMAIL = "e2e-google@example.com"
-NAME = "E2E Test User"
+# A dedicated Google test account is used for the Google sign-in pass; it is
+# personal data, so it is supplied through the environment and never committed.
+EMAIL = os.environ.get("E2E_GOOGLE_EMAIL", "")
+NAME = os.environ.get("E2E_GOOGLE_NAME", "")
 
 LANDING = ("Let's Get Started", "Balance Manager", "Welcome Back",
            "Enter your total available balance", "Set up your initial balance")
@@ -154,4 +156,9 @@ def wait_after_account_tap() -> str | None:
 
 
 if __name__ == "__main__":
+    if not EMAIL or not NAME:
+        raise SystemExit(
+            "Set E2E_GOOGLE_EMAIL and E2E_GOOGLE_NAME to the Google test account "
+            "before running this pass (they are personal data and are not committed)."
+        )
     sys.exit(main())

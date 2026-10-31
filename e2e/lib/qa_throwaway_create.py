@@ -13,12 +13,12 @@ sys.path.insert(0, BASE)
 from lib import uidriver as u
 sys.path.insert(0, os.path.join(BASE, "lib"))
 import phase1b_signup_email as p  # reuse mail.tm + credentials helpers
+import creds  # local, git-ignored Firebase config + runtime passwords
 
 REST_BASE = "https://identitytoolkit.googleapis.com/v1/accounts:"
 
 def api_key() -> str:
-    with open(os.path.join(os.path.dirname(BASE), "app", "google-services.json"), encoding="utf-8") as f:
-        return json.load(f)["client"][0]["api_key"][0]["current_key"]
+    return creds.firebase_web_api_key()
 
 def rest(path, body, token=None, extra=None):
     url = "https://identitytoolkit.googleapis.com/v1/accounts:" + path + "?key=" + api_key()
@@ -34,7 +34,7 @@ def rest(path, body, token=None, extra=None):
         return e.code, e.read().decode("utf-8", "replace")
 
 ANDROID_EXTRA = {"X-Android-Package": "com.personal.balance",
-                 "X-Android-Cert": "1022B0D0D0AA91C15906677F40244F973CD51CDA"}
+                 "X-Android-Cert": creds.firebase_cert_hash()}
 
 
 def verify_via_oob(email: str, pw: str) -> bool:
@@ -98,7 +98,7 @@ def verify_via_oob(email: str, pw: str) -> bool:
 def new_throwaway():
     stamp = time.strftime("%Y%m%d%H%M%S")
     email = f"throwqa{stamp}@uberip.com"
-    pw = "RUNTIME_PASSWORD"
+    pw = creds.random_password()
     p.mailtm_ensure(email, pw)
     s, b = rest("signUp", {"email": email, "password": pw, "returnSecureToken": True},
                 extra=ANDROID_EXTRA)
