@@ -2,6 +2,7 @@ package com.personal.balance.domain.ai.orchestration
 
 import com.personal.balance.domain.ai.AiRequest
 import com.personal.balance.domain.ai.AiResult
+import com.personal.balance.domain.ai.AiScope
 import com.personal.balance.domain.ai.AskAiUseCase
 import com.personal.balance.domain.ai.ConversationTurn
 import com.personal.balance.domain.finance.AiFinancialContextBuilder
@@ -19,7 +20,9 @@ import java.time.ZoneId
  * The AI Financial Assistant orchestrator: turns ONE user message into zero,
  * one, or many capability runs under a single authoritative flow.
  *
- * Pipeline for every message that passes [ConversationalTriage]:
+ * Pipeline for every message that passes [ConversationalTriage] and the
+ * deterministic [OutOfScopeGuard] scope gate (off-topic messages are declined
+ * locally with [AiScope.REPLY]):
  *  1. [AiRequestPlanner] plans the request (intent + data needs + financial
  *     relevance + confidence); [PlanSanitizer] validates it deterministically.
  *  2. Genuinely ambiguous (non-financial) messages or dangling references
@@ -60,6 +63,12 @@ class AiOrchestrator(
     suspend fun route(question: String, conversation: List<ConversationTurn>): AiOrchestrationResult {
         // 0. Cheapest gate: pure conversational intents answer locally, 0 AI calls.
         ConversationalTriage.localReply(question)?.let { return AiOrchestrationResult.Text(it) }
+
+        // 0b. Deterministic scope gate: plainly off-topic messages (bare
+        // arithmetic like "5 plus 8", coding, translation, ...) are declined
+        // locally with the app's one refusal sentence — 0 AI calls, 0 data
+        // loads, and identical wording every time.
+        OutOfScopeGuard.localReply(question)?.let { return AiOrchestrationResult.Text(it) }
 
         // 1. Plan the request. A planner failure is a real error; a malformed
         // plan is NOT — PlanSanitizer fills it from deterministic cues.
@@ -278,6 +287,15 @@ class AiOrchestrator(
         append("Lead with the most relevant data-backed observation (citing the numbers in the facts), ")
         append("then, when useful, give a concrete general suggestion based on those numbers. ")
         append("Keep it concise and helpful; do not pad the reply with disclaimers.")
+        appendLine()
+        appendLine()
+        append("Stay in scope: answer only about the user's own money. ")
+        append("If the message is instead a bare arithmetic expression the user typed (like ")
+        append("\"5 plus 8\"), general knowledge or trivia, coding, translation, an essay or a ")
+        append("joke, medical or legal advice, or any other unrelated topic, do not answer it ")
+        append("and do not do part of it — reply with exactly this sentence and nothing else: \"")
+        append(AiScope.REPLY)
+        append("\" Arithmetic and analysis of the user's own facts above are in scope.")
     }
 
     companion object {
@@ -298,11 +316,22 @@ class AiOrchestrator(
             append("If the facts are missing something the question needs, say so honestly.")
         }
 
-        private val GENERAL_COMPOSER_INSTRUCTIONS =
-            "Answer the user clearly, concisely, and helpfully. You have no access to the user's " +
-                "own financial data for this question, so never state specific balances, transactions, " +
-                "or amounts. If a question implicitly needs the user's numbers, say that the app can " +
-                "answer that by looking at their recent transactions, and invite them to ask."
+        private val GENERAL_COMPOSER_INSTRUCTIONS: String = buildString {
+            append("Answer questions about personal finance, budgeting and money clearly, ")
+            append("concisely and helpfully. You have no access to the user's own financial ")
+            append("data for this question, so never state specific balances, transactions, ")
+            append("or amounts. If a question implicitly needs the user's numbers, say that ")
+            append("the app can answer that by looking at their recent transactions, and ")
+            append("invite them to ask. ")
+            append("You only serve the user's own money. If the message is instead a bare ")
+            append("arithmetic expression (like \"5 plus 8\"), a general-knowledge or trivia ")
+            append("question, a coding request, a translation request, an essay or a joke, ")
+            append("medical or legal advice, or any other unrelated topic, do not answer it ")
+            append("and do not do part of it. Reply with exactly this sentence and nothing ")
+            append("else: \"")
+            append(AiScope.REPLY)
+            append("\"")
+        }
 
         private const val CLARIFICATION_REPLY =
             "Could you tell me a little more about what you'd like to know? I can look at how much " +

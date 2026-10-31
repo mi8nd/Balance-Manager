@@ -146,6 +146,27 @@ class AiOrchestratorTest {
     }
 
     @Test
+    fun outOfScopeArithmetic_declinedLocally_noAiCalls_noDataLoad() = runBlocking {
+        val source = RecordingSource(FinancialTransactionsResult.Success(emptyList()))
+        val usage = RecordingUsageController()
+        val planner = FakePlanner()
+        val assistant = RecordingAssistant(listOf(AiResult.Success("13", 1)))
+        val orch = orchestrator(planner = planner, assistant = assistant, source = source, usage = usage)
+
+        val result = orch.route("5 plus 8", emptyList())
+
+        assertTrue(result is AiOrchestrationResult.Text)
+        assertEquals(
+            com.personal.balance.domain.ai.AiScope.REPLY,
+            (result as AiOrchestrationResult.Text).text,
+        )
+        assertEquals(0, planner.calls)
+        assertEquals(0, assistant.requests.size)
+        assertEquals(0, source.calls)
+        assertEquals(0, usage.calls)
+    }
+
+    @Test
     fun generalOnly_composerCalledOnce_noDataLoad() = runBlocking {
         val source = RecordingSource(FinancialTransactionsResult.Success(emptyList()))
         val assistant = RecordingAssistant(

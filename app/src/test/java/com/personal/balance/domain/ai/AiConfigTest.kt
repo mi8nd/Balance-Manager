@@ -34,4 +34,12 @@ class AiConfigTest {
         assertTrue(config.maxCallsPerWindow > 0)
         assertTrue(config.windowMillis > 0)
     }
+
+    @Test
+    fun defaults_declareTheAssistantScopeAndRefusal() {
+        // The prompt-level scope rule must quote the same refusal sentence the
+        // deterministic gate uses, so both paths answer identically.
+        assertTrue(config.systemPrompt.contains(AiScope.REPLY))
+        assertTrue(config.systemPrompt.contains("SCOPE"))
+    }
 }
