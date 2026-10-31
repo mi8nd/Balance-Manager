@@ -12,6 +12,7 @@ Environment overrides:
   E2E_SECONDARY_PASSWORD  fixed password for the secondary test account
   FIREBASE_WEB_API_KEY    web API key (else read from app/google-services.json)
   FIREBASE_CERT_HASH      signing-cert SHA-1 (else read from app/google-services.json)
+  FIREBASE_PROJECT_ID     Firebase project id (else read from app/google-services.json)
 """
 
 from __future__ import annotations
@@ -82,6 +83,17 @@ def firebase_web_api_key() -> str:
         return env
     try:
         return _google_services()["client"][0]["api_key"][0]["current_key"]
+    except (OSError, KeyError, IndexError, TypeError) as exc:
+        raise RuntimeError(_MISSING_CONFIG) from exc
+
+
+def firebase_project_id() -> str:
+    """Firebase project id from app/google-services.json, or FIREBASE_PROJECT_ID."""
+    env = os.environ.get("FIREBASE_PROJECT_ID")
+    if env:
+        return env
+    try:
+        return _google_services()["project_info"]["project_id"]
     except (OSError, KeyError, IndexError, TypeError) as exc:
         raise RuntimeError(_MISSING_CONFIG) from exc
 

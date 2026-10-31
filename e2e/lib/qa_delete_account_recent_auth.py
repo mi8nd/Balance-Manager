@@ -52,24 +52,26 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROJECT_ENV = os.path.join(ROOT, "e2e", ".secrets", "creds.env")
+sys.path.insert(0, os.path.join(ROOT, "e2e", "lib"))
+import creds  # Firebase project id + web API key from the local google-services.json
 
 API_KEY_LABELS = ("primary_email", "secondary_email")
 PW_KEY_LABELS = ("primary_password", "secondary_password")
 
-# The Firebase REST endpoints (project-scoped; the API key is read from
-# google-services.json so it is never hardcoded in this repo).
+# The Firebase REST endpoints (project-scoped; the project id and API key are
+# read from google-services.json so they are never hardcoded in this repo).
 AUTH_BASE = "https://identitytoolkit.googleapis.com/v1"
-FIRESTORE_BASE = (
-    "https://firestore.googleapis.com/v1/projects/"
-    "REDACTED_PROJECT_ID/databases/(default)/documents"
-)
 
 
 def read_api_key() -> str:
-    path = os.path.join(ROOT, "app", "google-services.json")
-    with open(path, encoding="utf-8") as f:
-        data = json.load(f)
-    return data["client"][0]["api_key"][0]["current_key"]
+    return creds.firebase_web_api_key()
+
+
+def firestore_base() -> str:
+    return (
+        "https://firestore.googleapis.com/v1/projects/"
+        f"{creds.firebase_project_id()}/databases/(default)/documents"
+    )
 
 
 def read_creds() -> dict:
@@ -142,7 +144,7 @@ def main() -> int:
             if after:
                 # auth gone after the delete attempt = clean full deletion.
                 code2, body2 = _get(
-                    f"{FIRESTORE_BASE}/users", None if True else None
+                    f"{firestore_base()}/users"
                 )
                 print(f"[{tag}] AFTER: auth deleted (token_alive={token_alive})")
                 print(f"[{tag}] result=OK_AUTH_DELETED_WHEN_EXPECTED_CLEAN")
@@ -157,7 +159,7 @@ def main() -> int:
         id_token = body.get("idToken", "")
 
         # Firestore user doc for this uid.
-        code2, body2 = _get(f"{FIRESTORE_BASE}/users/{uid}", id_token)
+        code2, body2 = _get(f"{firestore_base()}/users/{uid}", id_token)
         if code2 == 200:
             fields = body2.get("fields", {})
             balance = _piastres(fields.get("currentBalance", {}))

@@ -14,10 +14,10 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from creds import firebase_web_api_key
+from creds import firebase_project_id, firebase_web_api_key
 
 API_KEY = firebase_web_api_key()
-PROJECT_ID = "REDACTED_PROJECT_ID"
+PROJECT_ID = firebase_project_id()
 
 def load_creds():
     env_path = Path(__file__).resolve().parents[1] / ".secrets" / "creds.env"

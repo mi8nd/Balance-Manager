@@ -1,7 +1,7 @@
 # Firebase Authentication — Verification Report
 
 **Date:** 2026-09-11  
-**Project:** `com.personal.balance` (Firebase project `REDACTED_PROJECT_ID`)  
+**Project:** `com.personal.balance` (Firebase project configured in the local `app/google-services.json`)  
 **Approach:** Zero-download — real production REST API + Gradle build/unit tests  
 
 ---
@@ -80,7 +80,7 @@ All 48 unit tests across the project pass. No new tests were added; existing tes
 
 ## 4. REST Verification — Real Production Backend (9/9 PASS)
 
-All tests executed against the live `identitytoolkit.googleapis.com` endpoint for project `REDACTED_PROJECT_ID` using the project's API key. Test accounts are created and deleted within the same run.
+All tests executed against the live `identitytoolkit.googleapis.com` endpoint for the project configured in the local `app/google-services.json` using its API key. Test accounts are created and deleted within the same run.
 
 | Test | Description | Result | Evidence |
 |---|---|---|---|
